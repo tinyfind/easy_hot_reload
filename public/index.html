@@ -1,0 +1,87 @@
+<!--
+ * @Author: dong 2710732812@qq.com
+ * @Date: 2022-05-15 18:58:22
+ * @LastEditors: dong 2710732812@qq.com
+ * @LastEditTime: 2022-05-16 10:22:52
+ * @FilePath: \hot_reload\public\index.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./style/index.css">
+</head>
+<body>
+    <div class="app">
+        app 2
+        app
+        console.log('dd')
+    </div>
+    <button class="reloadCss">reload css</button>
+    <button class="reloadJs">reload js</button>
+    <button class="reloadHtml">reload html</button>
+
+</body>
+<script src="./index.js"></script>
+<script>
+    const button1 = document.querySelector('.reloadCss')
+    const button2 = document.querySelector('.reloadJs')
+    const button3 = document.querySelector('.reloadHtml')
+
+    function updateSource(path) {
+        // 判断 path 
+        // css js html
+        // 
+        const reg = /[.?/?\\?]/g
+        if (['index.html'].includes(path)) {
+            location.reload()
+        } else if (path.includes('.js')) {
+            const scripts = Array.from(document.querySelectorAll('script')).filter(item=>item.getAttribute('src'))
+            const target = scripts.find(item => item
+                .getAttribute('src')
+                .replaceAll(reg, '') === path.replaceAll(reg, '')
+            )
+            if (target) {
+                const script = document.createElement('script')
+                script.src = target.getAttribute('src')
+                target.remove()
+                document.querySelector('body').appendChild(script)
+            }
+        } else if (path.includes('.css')) {
+            const cssLinks = Array.from(document.querySelectorAll('link[rel=stylesheet]'))
+            const target = cssLinks.find(item => item
+                .getAttribute('href')
+                .replaceAll(reg, '') === path.replaceAll(reg, ''))
+            if (target) {
+                const link = document.createElement('link')
+                link.rel = "stylesheet"
+                link.href = target.getAttribute('href')
+                target.remove()
+                document.querySelector('head').appendChild(link)
+            }
+        }
+
+    }
+
+    const socket = new WebSocket('ws://localhost:3000/socketTest');
+    // Connection opened
+    socket.addEventListener('open', function (event) {
+        socket.send('Hello Server!');
+    });
+
+    // Listen for messages
+    socket.addEventListener('message', function (event) {
+        let {
+            path
+        } = JSON.parse(event.data)
+        console.log(path)
+        updateSource(path)
+
+    });
+</script>
+
+</html>
